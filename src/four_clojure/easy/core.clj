@@ -164,3 +164,58 @@
 
 ;; Problem 39, Interleave Two Seqs
 ;; Special Restrictions : interleave
+
+(defn -interleave [coll1 coll2]
+  (lazy-seq (loop [result []
+                   c1 coll1
+                   c2 coll2]
+              (if (or (empty? c1) (empty? c2))
+                result
+                (recur (conj result (first c1) (first c2)) 
+                       (rest c1) 
+                       (rest c2))))))
+
+(= (-interleave [1 2 3] [:a :b :c]) '(1 :a 2 :b 3 :c))
+(= (-interleave [1 2] [3 4 5 6]) '(1 3 2 4))
+(= (-interleave [1 2 3 4] [5]) [1 5])
+(= (-interleave [30 20] [25 15]) [30 25 20 15])
+
+;; Problem 40, Interpose a Seq
+;; Special Restrictions : interpose
+
+(defn -interpose [i c]
+  (drop-last (loop [result []
+                    coll c]
+               (if (empty? coll)
+                 result
+                 (recur (conj result (first coll) i) (rest coll))))))
+
+(= (-interpose 0 [1 2 3]) [1 0 2 0 3])
+(= (apply str (-interpose ", " ["one" "two" "three"])) "one, two, three")
+(= (-interpose :z [:a :b :c :d]) [:a :z :b :z :c :z :d])
+
+;; Problem 41, Drop Every Nth Item
+(defn -partition-by-all [coll n]
+         (when-not (empty? coll)
+           (conj (take n coll) (-partition-by-all (drop n coll) n))))
+
+(defn -drop-nth-element [coll n]
+  (->> (map #(take (dec n) %) (-partition-by-all coll n))
+      (apply concat) 
+       (into [])))
+
+(= (-drop-nth-element [1 2 3 4 5 6 7 8] 3) [1 2 4 5 7 8])
+(= (-drop-nth-element [:a :b :c :d :e :f] 2) [:a :c :e])
+(= (-drop-nth-element [1 2 3 4 5 6] 4) [1 2 3 5 6])
+
+; Problem 42, Factorial Fun
+
+(defn -fact [number]
+  (if (= number 1)
+    number
+    (* number (-fact (- number 1)))))
+
+(= (-fact 1) 1)
+(= (-fact 3) 6)
+(= (-fact 5) 120)
+(= (-fact 8) 40320)
