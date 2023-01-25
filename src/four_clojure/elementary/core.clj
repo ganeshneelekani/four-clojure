@@ -91,3 +91,8 @@
 ;; Problem 37, Regular Expressions
 (= "ABC" (apply str (re-seq #"[A-Z]+" "bA1B3Ce ")))
 
+;; Problem 52, Intro to Destructuring
+(= [2 4] (let [[a b c d e f g] (range)] (into [] (take 2 (filter even? (range 1 10))))))
+
+;; Problem 57, Simple Recursion
+(= `(5 4 3 2 1) ((fn foo [x] (when (> x 0) (conj (foo (dec x)) x))) 5))

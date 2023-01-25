@@ -197,7 +197,7 @@
 ;; Problem 41, Drop Every Nth Item
 (defn -partition-by-all [coll n]
          (when-not (empty? coll)
-           (conj (take n coll) (-partition-by-all (drop n coll) n))))
+           (cons (take n coll) (-partition-by-all (drop n coll) n))))
 
 (defn -drop-nth-element [coll n]
   (->> (map #(take (dec n) %) (-partition-by-all coll n))
@@ -219,3 +219,30 @@
 (= (-fact 3) 6)
 (= (-fact 5) 120)
 (= (-fact 8) 40320)
+
+;;Problem 45, Intro to Iterate
+(= '(1 4 7 10 13) (take 5 (iterate #(+ 3 %) 1)))
+
+;; Problem 47, Contain Yourself
+
+(contains? #{4 5 6} 4)
+(contains? [1 1 1 1 1] 1)
+(contains? {4 :a 2 :b} 4)
+(not (contains? [1 2 4] 5))
+
+;; Problem 48, Intro to some
+(= 6 (some #{2 7 6} [5 6 7 8]))
+(=  6 (some #(when (even? %) %) [5 6 7 8]))
+
+;; Problem 49, Split a sequence
+(defn -split-at
+  [n coll]
+  [(take n coll) (drop n coll)])
+
+(= (-split-at 3 [1 2 3 4 5 6]) [[1 2 3] [4 5 6]])
+(= (-split-at 1 [:a :b :c :d]) [[:a] [:b :c :d]])
+(= (-split-at 2 [[1 2] [3 4] [5 6]]) [[[1 2] [3 4]] [[5 6]]])
+
+;; Problem 51, Advanced Destructuring
+(= [1 2 [3 4 5] [1 2 3 4 5]] (let [[a b & c :as d] (list 1 2 3 4 5)] [a b c d]))
+
