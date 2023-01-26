@@ -73,21 +73,27 @@
 (= nil (analyze-tic-toc [[:e :e :e]
             [:e :e :e]
             [:e :e :e]]))
+
 (= :x (analyze-tic-toc [[:x :e :o]
            [:x :e :e]
            [:x :e :o]]))
+
 (= :o (analyze-tic-toc [[:e :x :e]
            [:o :o :o]
            [:x :e :x]]))
+
 (= nil (analyze-tic-toc [[:x :e :o]
             [:x :x :e]
             [:o :x :o]]))
+
 (= :x (analyze-tic-toc [[:x :e :e]
            [:o :x :e]
            [:o :e :x]]))
+
 (= :o (analyze-tic-toc [[:x :e :o]
            [:x :o :e]
            [:o :e :x]]))
+
 (= nil (analyze-tic-toc [[:x :o :x]
             [:x :o :x]
             [:o :x :o]]))

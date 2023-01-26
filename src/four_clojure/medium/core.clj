@@ -104,3 +104,32 @@
 (= ["HELLO" 5] ((-juxt #(.toUpperCase %) count) "hello"))
 (= [2 6 4] ((-juxt :a :c :b) {:a 2, :b 4, :c 6, :d 8 :e 10}))
 
+;; Problem 60, Sequence Reductions
+;; Special Restrictions : reductions
+(defn seq-reduction
+  ([f coll] (seq-reduction f (first coll) (rest coll)))
+  ([f initial coll]
+   (lazy-seq
+    (if (seq coll)
+      (cons initial
+            (seq-reduction f (f initial (first coll)) (rest coll)))
+      [initial]))))
+
+(= (take 5 (seq-reduction + (range))) [0 1 3 6 10])
+(= (seq-reduction conj [1] [2 3 4]) [[1] [1 2] [1 2 3] [1 2 3 4]])
+(= (last (seq-reduction * 2 [3 4 5])) (reduce * 2 [3 4 5]) 120)
+
+;; Problem 65, Black Box Testing
+
+(defn black-box-testing [c]
+  (let [e (empty c)]
+    (condp = e
+      {} :map
+      #{} :set
+      () (if (reversible? c) :vector :list))))
+
+(= :map (black-box-testing {:a 1, :b 2}))
+(= :list (black-box-testing (range (rand-int 20))))
+(= :vector (black-box-testing [1 2 3 4 5 6]))
+(= :set (black-box-testing #{10 (rand-int 5)}))
+(= [:map :set :vector :list] (map black-box-testing [{} #{} [] ()]))

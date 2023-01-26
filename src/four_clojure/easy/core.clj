@@ -246,3 +246,72 @@
 ;; Problem 51, Advanced Destructuring
 (= [1 2 [3 4 5] [1 2 3 4 5]] (let [[a b & c :as d] (list 1 2 3 4 5)] [a b c d]))
 
+;; Problem 61, Map Construction
+;; Special Restrictions : zipmap
+
+(defn -map-construction [arg1 arg2]
+  (loop [result {}
+         a arg1
+         b arg2]
+    (if (or (empty? a) (empty? b))
+      result
+      (recur (assoc result (first a) (first b)) (rest a) (rest b)))))
+
+(= (-map-construction [:a :b :c] [1 2 3]) {:a 1, :b 2, :c 3})
+(= (-map-construction [1 2 3 4] ["one" "two" "three"]) {1 "one", 2 "two", 3 "three"})
+(= (-map-construction [:foo :bar] ["foo" "bar" "baz"]) {:foo "foo", :bar "bar"})
+
+;; Problem 62, Re-implement Iteration
+;; Special Restrictions : iterate
+
+(defn -iterate [f x]
+  (cons
+   x
+   (lazy-seq
+    (-iterate f (f x)))))
+
+(= (take 5 (-iterate #(* 2 %) 1)) [1 2 4 8 16])
+(= (take 100 (-iterate inc 0)) (take 100 (range)))
+(= (take 9 (-iterate #(inc (mod % 3)) 1)) (take 9 (cycle [1 2 3])))
+
+;; Problem 63, Group a Sequence
+;; Special Restrictions : group-by
+
+(defn -group-by[f coll]
+  (reduce (fn [acc v]
+            (let [k (f v)]
+              (assoc acc k (conj (get acc k []) v))))
+          {}
+          coll))
+
+(= (-group-by #(> % 5) #{1 3 6 8}) {false [1 3], true [6 8]})
+(= (-group-by #(apply / %) [[1 2] [2 4] [4 6] [3 6]])
+   {1/2 [[1 2] [2 4] [3 6]], 2/3 [[4 6]]})
+(= (-group-by count [[1] [1 2] [3] [1 2 3] [2 3]])
+   {1 [[1] [3]], 2 [[1 2] [2 3]], 3 [[1 2 3]]})
+
+; Problem 66, Greatest Common Divisor
+
+(defn gcd [a b]
+  (if (zero? b)
+    a
+    (recur b (mod a b))))
+
+(= (gcd 2 4) 2)
+(= (gcd 10 5) 5)
+(= (gcd 5 7) 1)
+(= (gcd 1023 858) 33)
+
+;; Problem 67, Prime Numbers
+(defn -prime-number [x]
+  (take x (reduce
+           (fn [primes number]
+             (if (some zero? (map (partial mod number) primes))
+               primes
+               (conj primes number)))
+           [2]
+           (take 1000 (iterate inc 3)))))
+
+(= (-prime-number 2) [2 3])
+(= (-prime-number 5) [2 3 5 7 11])
+(= (last (-prime-number 100)) 541)

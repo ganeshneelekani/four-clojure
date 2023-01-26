@@ -96,3 +96,16 @@
 
 ;; Problem 57, Simple Recursion
 (= `(5 4 3 2 1) ((fn foo [x] (when (> x 0) (conj (foo (dec x)) x))) 5))
+
+;; Problem 64, Intro to Reduce
+(= 15 (reduce + [1 2 3 4 5]))
+(=  0 (reduce + []))
+(=  6 (reduce + 1 [2 3]))
+
+;; Problem 68, Recurring Theme
+(= [7 6 5 4 3]
+   (loop [x 5
+          result []]
+     (if (> x 0)
+       (recur (dec x) (conj result (+ 2 x)))
+       result)))
