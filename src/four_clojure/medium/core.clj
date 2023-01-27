@@ -133,3 +133,105 @@
 (= :vector (black-box-testing [1 2 3 4 5 6]))
 (= :set (black-box-testing #{10 (rand-int 5)}))
 (= [:map :set :vector :list] (map black-box-testing [{} #{} [] ()]))
+
+;; Problem 69, Merge with a Function
+;; Do not use merge-with
+
+(defn -merge-with [f & maps]
+  (reduce (fn [m1 m2]
+            (reduce (fn [m e]
+                      (let [k (key e) v (val e)]
+                        (if (contains? m k)
+                          (assoc m k (f (get m k) v))
+                          (assoc m k v)))) 
+                    (or m1 {}) (seq m2))
+            )
+          {}
+maps))
+
+(= (-merge-with * {:a 2, :b 3, :c 4} {:a 2} {:b 2} {:c 5})
+   {:a 4, :b 6, :c 20})
+(= (-merge-with - {1 10, 2 20} {1 3, 2 10, 3 15})
+   {1 7, 2 10, 3 15})
+(= (-merge-with concat {:a [3], :b [6]} {:a [4 5], :c [8 9]} {:b [7]})
+   {:a [3 4 5], :b [6 7], :c [8 9]})
+
+; Problem 70, Word Sorting
+
+(defn word-count [words] 
+  (sort-by #(.toLowerCase %) (re-seq #"\w+" words)))
+
+(= (word-count  "Have a nice day.")
+   ["a" "day" "Have" "nice"])
+(= (word-count  "Clojure is a fun language!")
+   ["a" "Clojure" "fun" "is" "language"])
+(= (word-count  "Fools fall for foolish follies.")
+   ["fall" "follies" "foolish" "Fools" "for"])
+
+;; 	Problem 74, Filter Perfect Squares
+(defn filter-perfect-square [s]
+  (let [int-arr (map read-string (clojure.string/split s #","))
+        filtered-arr (filter #(some (fn [x] 
+                                      (= (* x x) %)) (range %)) int-arr)]
+    (clojure.string/join "," filtered-arr)))
+
+;; Problem 76, Intro to Trampoline
+(= [1 3 5 7 9 11]
+   (letfn
+    [(foo [x y] #(bar (conj x y) y))
+     (bar [x y] (if (> (last x) 10)
+                  x
+                  #(foo x (+ 2 y))))]
+     (trampoline foo [] 1)))
+
+;; Problem 77, Anagram Finder
+
+(defn anagram-finder [s]
+  (->> (group-by set s)
+       (vals)
+       (map set)
+       (filter #(> (count %) 1))
+       (set)))
+
+(= (anagram-finder ["meat" "mat" "team" "mate" "eat"])
+   #{#{"meat" "team" "mate"}})
+(= (anagram-finder ["veer" "lake" "item" "kale" "mite" "ever"])
+   #{#{"veer" "ever"} #{"lake" "kale"} #{"mite" "item"}})
+
+;; Problem 78, Reimplement Trampoline
+;; Special Restrictions : trampoline
+
+(defn -trampolione [f & args]
+  (loop [f (apply f args)]
+    (if (fn? f)
+      (recur (f))
+      f)))
+
+(= (letfn [(triple [x] #(sub-two (* 3 x)))
+           (sub-two [x] #(stop? (- x 2)))
+           (stop? [x] (if (> x 50) x #(triple x)))]
+     (-trampolione triple 2))
+   82)
+
+(= (letfn [(my-even? [x] (if (zero? x) true #(my-odd? (dec x))))
+           (my-odd? [x] (if (zero? x) false #(my-even? (dec x))))]
+     (map (partial -trampolione my-even?) (range 6)))
+   [true false true false true false])
+
+;; Problem 80, Perfect Numbers
+(defn perfect-number? [x]
+  (= x (apply + (filter #(= 0 (mod x %)) (range 1 x)))))
+
+(= (perfect-number? 6) true)
+(= (perfect-number? 7) false)
+(= (perfect-number? 496) true)
+(= (perfect-number? 500) false)
+(= (perfect-number? 8128) true)
+
+;; Problem 85, Power Set
+
+(defn pow [s]
+  (if (empty? s) #{#{}}
+      (let [f (first s)
+            r (pow (rest s))]
+        (into r (map #(conj % f) r)))))

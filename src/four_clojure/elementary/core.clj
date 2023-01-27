@@ -109,3 +109,13 @@
      (if (> x 0)
        (recur (dec x) (conj result (+ 2 x)))
        result)))
+
+;; Problem 71, Rearranging Code: ->
+(= (last (sort (rest (reverse [2 5 4 1 3 6]))))
+   (-> [2 5 4 1 3 6] reverse rest sort last)
+   5)
+
+;; Problem 72, Rearranging Code: ->>
+(= (reduce + (map inc (take 3 (drop 2 [2 5 4 1 3 6]))))
+   (->> [2 5 4 1 3 6] (drop 2) (take 3) (map inc) (reduce +))
+   11)

@@ -315,3 +315,60 @@
 (= (-prime-number 2) [2 3])
 (= (-prime-number 5) [2 3 5 7 11])
 (= (last (-prime-number 100)) 541)
+
+;; Problem 81, Set Intersection
+;; Special Restrictions : intersection
+
+
+(defn -intersection [s1 s2 ]
+  (set (reduce (fn [acc x]
+                 (if (contains? s2 x)
+                   (conj acc x)
+                   acc)) [] s1)))
+
+(= (-intersection #{0 1 2 3} #{2 3 4 5}) #{2 3})
+(= (-intersection #{0 1 2} #{3 4 5}) #{})
+(= (-intersection #{:a :b :c :d} #{:c :e :a :f :d}) #{:a :c :d})
+
+;; Problem 83, A Half-Truth
+
+(defn -half-truth [& x]
+  (and (contains? (set x) true)
+       (not (every? identity x))))
+
+(= false (-half-truth false false))
+(= true (-half-truth true false))
+(= false (-half-truth true))
+(= true (-half-truth false true false))
+(= false (-half-truth true true true))
+(= true (-half-truth true true true false))
+
+;; Problem 88, Symmetric Difference
+
+(defn -intersection [s1 s2 ]
+  (set (reduce (fn [acc x]
+                 (if-not (contains? s1 x)
+                   (conj acc x)
+                   acc)) [] s2)))
+
+(= (-intersection #{1 2 3 4 5 6} #{1 3 5 7}) #{2 4 6 7})
+(= (__ #{:a :b :c} #{}) #{:a :b :c})
+(= (__ #{} #{4 5 6}) #{4 5 6})
+(= (__ #{[1 2] [2 3]} #{[2 3] [3 4]}) #{[1 2] [3 4]})
+
+;; Problem 90, Cartesian Product
+
+(defn cartesian-product [s1 s2]
+  (set (for [a s1 b s2]
+         (vector a b))))
+
+(= (cartesian-product #{"ace" "king" "queen"} #{"♠" "♥" "♦" "♣"})
+   #{["ace"   "♠"] ["ace"   "♥"] ["ace"   "♦"] ["ace"   "♣"]
+     ["king"  "♠"] ["king"  "♥"] ["king"  "♦"] ["king"  "♣"]
+     ["queen" "♠"] ["queen" "♥"] ["queen" "♦"] ["queen" "♣"]})
+
+(= (cartesian-product #{1 2 3} #{4 5})
+   #{[1 4] [2 4] [3 4] [1 5] [2 5] [3 5]})
+
+(= 300 (count (cartesian-product (into #{} (range 10))
+                  (into #{} (range 30)))))
