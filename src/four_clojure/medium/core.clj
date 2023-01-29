@@ -235,3 +235,41 @@ maps))
       (let [f (first s)
             r (pow (rest s))]
         (into r (map #(conj % f) r)))))
+
+;; Problem 93, Partially Flatten a Sequence
+
+(defn -flatten [input]
+  (loop [result input]
+    (if-not (coll? (first result)) 
+      result 
+      (recur (first result)))))
+
+(defn -partially-flattern[input]
+  (distinct (let [f (fn [x]
+                      (mapv #(-flatten %) x))]
+              (f (filter sequential?
+                         (rest (tree-seq sequential? seq input)))))))
+
+(= (-partially-flattern [["Do"] ["Nothing"]])
+   [["Do"] ["Nothing"]])
+(= (-partially-flattern [[[[:a :b]]] [[:c :d]] [:e :f]])
+   [[:a :b] [:c :d] [:e :f]])
+(= (-partially-flattern '((1 2) ((3 4) ((((5 6)))))))
+   '((1 2) (3 4) (5 6)))
+
+;; Problem 98, Equivalence Classes
+(defn -group-by [f coll]
+  (into #{} (vals (reduce (fn [acc v]
+                            (let [k (f v)]
+                              (assoc acc k (conj (get acc k #{}) v))))
+                          {}
+                          coll))))
+
+(= (-group-by #(* % %) #{-2 -1 0 1 2})
+   #{#{0} #{1 -1} #{2 -2}})
+(= (-group-by #(rem % 3) #{0 1 2 3 4 5})
+   #{#{0 3} #{1 4} #{2 5}})
+(= (-group-by identity #{0 1 2 3 4})
+   #{#{0} #{1} #{2} #{3} #{4}})
+(= (-group-by (constantly true) #{0 1 2 3 4})
+   #{#{0 1 2 3 4}})

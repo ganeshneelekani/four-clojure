@@ -97,3 +97,46 @@
 (= nil (analyze-tic-toc [[:x :o :x]
             [:x :o :x]
             [:o :x :o]]))
+
+;; Problem 92, Read Roman numerals
+(def roman-to-int {"I" 1 "V" 5 "X" 10 "L" 50 "C" 100 "D" 500 "M" 1000})
+
+ (defn -sum [input]
+   (let [v (map #(get roman-to-int %) input)]
+     (reduce (fn [f s]
+               (if (>= f s)
+                 (+  f s)
+                 (- s f)))
+             (first v)
+             (next v))))
+
+ (defn -partition-by
+   [f coll]
+   (lazy-seq (when-let [st (seq coll)]
+               (let [s (map str st)
+                     ft #(get roman-to-int %)
+                     run (reduce (fn [acc x]
+                                   (if (empty? acc)
+                                     (conj acc x)
+                                     (if (>= 0 (- (ft (last acc)) 
+                                                  (ft x)))
+                                       (conj acc x)
+                                       (reduced acc))))
+                                 []
+                                 s)
+                     result (-sum run)]
+                 (cons result (-partition-by f (drop (count run) s))))))) 
+
+
+(defn -roman-to-number [input]
+  (reduce + (-partition-by identity input)))
+ 
+
+(-partition-by identity "MMMCMXCIX")
+
+(-partition-by identity "XLVIII")
+
+(= 14 (-roman-to-number "XIV"))
+(= 827 (-roman-to-number "DCCCXXVII"))
+(= 3999 (-roman-to-number "MMMCMXCIX"))
+(= 48 (-roman-to-number "XLVIII"))

@@ -346,15 +346,21 @@
 ;; Problem 88, Symmetric Difference
 
 (defn -intersection [s1 s2 ]
-  (set (reduce (fn [acc x]
-                 (if-not (contains? s1 x)
-                   (conj acc x)
-                   acc)) [] s2)))
+  (let [rds (fn [z]
+              (fn [acc x]
+                (if-not (contains? z x)
+                  (conj acc x)
+                  acc)))]
+    (set (concat (reduce (rds s2) [] s1)
+                 (reduce (rds s1) [] s2)))))
+
+(defn -intersection-1 [s1 s2]
+  (set (concat (reduce disj s1 s2) (reduce disj s2 s1))))
 
 (= (-intersection #{1 2 3 4 5 6} #{1 3 5 7}) #{2 4 6 7})
-(= (__ #{:a :b :c} #{}) #{:a :b :c})
-(= (__ #{} #{4 5 6}) #{4 5 6})
-(= (__ #{[1 2] [2 3]} #{[2 3] [3 4]}) #{[1 2] [3 4]})
+(= (-intersection #{:a :b :c} #{}) #{:a :b :c})
+(= (-intersection-1 #{} #{4 5 6}) #{4 5 6})
+(= (-intersection-1 #{[1 2] [2 3]} #{[2 3] [3 4]}) #{[1 2] [3 4]})
 
 ;; Problem 90, Cartesian Product
 
@@ -368,7 +374,105 @@
      ["queen" "♠"] ["queen" "♥"] ["queen" "♦"] ["queen" "♣"]})
 
 (= (cartesian-product #{1 2 3} #{4 5})
-   #{[1 4] [2 4] [3 4] [1 5] [2 5] [3 5]})
+   #{[2 4] [1 4] [3 4] [1 5] [2 5] [3 5]})
 
 (= 300 (count (cartesian-product (into #{} (range 10))
                   (into #{} (range 30)))))
+
+;; Problem 95, To Tree, or not to Tree
+(defn tree? [coll]
+  (or (nil? coll)
+      (and (sequential? coll)
+           (= 3 (count coll))
+           (tree? (nth coll 1))           
+           (tree? (nth coll 2)))))
+
+(= (tree? '(:a (:b nil nil) nil))
+   true)
+(= (tree? '(:a (:b nil nil)))
+   false)
+(= (tree? [1 nil [2 [3 nil nil] [4 nil nil]]])
+   true)
+(= (tree? [1 [2 nil nil] [3 nil nil] [4 nil nil]])
+   false)
+(= (tree? [1 [2 [3 [4 nil nil] nil] nil] nil])
+   true)
+(= (tree? [1 [2 [3 [4 false nil] nil] nil] nil])
+   false)
+(= (tree? '(:a nil ()))
+   false)
+
+;; Problem 96, Beauty is Symmetry
+(defn symmetric? [tree]
+  (let [left (first tree)
+        right (last tree)]
+    (if (and left right)
+      (and (symmetric? left) (symmetric? right) (== (first left) (first right)))
+      (not (or left right)))))
+
+; Problem 96, Beauty is Symmetry
+(defn sym-tree? [[n x y]] 
+  (letfn [(r [x] (if (sequential? x) (t x) x))
+          (t [[n x y]] [n (r y) (r x)])]
+    (= x (t y))))
+
+(= (sym-tree? '(:a (:b nil nil) (:b nil nil))) true)
+(= (sym-tree? '(:a (:b nil nil) nil)) false)
+(= (sym-tree? '(:a (:b nil nil) (:c nil nil))) false)
+(= (sym-tree? [1 [2 nil [3 [4 [5 nil nil] [6 nil nil]] nil]]
+        [2 [3 nil [4 [6 nil nil] [5 nil nil]]] nil]])
+   true)
+(= (sym-tree? [1 [2 nil [3 [4 [5 nil nil] [6 nil nil]] nil]]
+        [2 [3 nil [4 [5 nil nil] [6 nil nil]]] nil]])
+   false)
+(= (sym-tree? [1 [2 nil [3 [4 [5 nil nil] [6 nil nil]] nil]]
+        [2 [3 nil [4 [6 nil nil] nil]] nil]])
+   false)
+
+;Problem 97, Pascal's Triangle
+
+(defn pascal-triangle [x]
+  (cond
+    (= x 1) [1]    
+    (= x 2) [1 1]    
+    :else (loop [r 2 
+                 y [1 1]]            
+            (if (= r x)
+              y
+              (recur (inc r) (flatten [1 (map + y (rest y)) 1]))))))
+
+(= (pascal-triangle 1) [1])
+(= (map pascal-triangle (range 1 6))
+   [[1]
+    [1 1]
+    [1 2 1]
+    [1 3 3 1]
+    [1 4 6 4 1]])
+(= (pascal-triangle 11)
+   [1 10 45 120 210 252 210 120 45 10 1])
+(= (pascal-triangle 11)
+   [1 10 45 120 210 252 210 120 45 10 1])
+
+;; Problem 99, Product Digits
+(defn product-digit [x y]
+  (mapv #(Integer/parseInt %) (-> (* x y)
+                              str
+                              (clojure.string/split #""))))
+
+(= (product-digit 1 1) [1])
+(= (product-digit 99 9) [8 9 1])
+(= (product-digit 999 99) [9 8 9 0 1])
+
+;; Problem 100, Least Common Multiple
+(defn lcm [& x]   
+  (let [y (apply min x)]     
+    (loop [z y]       
+       (if (every? #(zero? (mod z %)) x)        
+         z         
+         (recur (+ z y))))))
+
+(== (lcm 2 3) 6)
+(== (lcm 5 3 7) 105)
+(== (lcm 1/3 2/5) 2)
+(== (lcm 3/4 1/6) 3/2)
+(== (lcm 7 5/7 2 3/5) 210)
