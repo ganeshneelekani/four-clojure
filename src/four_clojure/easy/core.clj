@@ -476,3 +476,15 @@
 (== (lcm 1/3 2/5) 2)
 (== (lcm 3/4 1/6) 3/2)
 (== (lcm 7 5/7 2 3/5) 210)
+
+
+;; Problem 107, Simple closures
+(defn my-closure
+  [n]
+  (fn my-pow
+    [x]
+    (reduce * (repeat n x))))
+
+(= 256 ((my-closure 2) 16), ((my-closure 8) 2))
+(= [1 8 27 64] (map (my-closure 3) [1 2 3 4]))
+(= [1 2 4 8 16] (map #((my-closure %) 2) [0 1 2 3 4]))

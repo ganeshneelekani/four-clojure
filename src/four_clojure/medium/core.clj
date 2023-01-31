@@ -1,4 +1,5 @@
-(ns four-clojure.medium.core)
+(ns four-clojure.medium.core
+  (:require [clojure.walk :as walk]))
 
 ;; Problem 43, Reverse Interleave
 (defn -partition-by-all [coll n]
@@ -273,3 +274,175 @@ maps))
    #{#{0} #{1} #{2} #{3} #{4}})
 (= (-group-by (constantly true) #{0 1 2 3 4})
    #{#{0 1 2 3 4}})
+
+;; Problem 102, intoCamelCase
+(defn into-camel-case[s]
+  (let [words (re-seq #"[A-Za-z]+" s)]
+    (apply str (first words) (map (fn [x]
+                                    (let [w (re-seq #"[A-Za-z]" x)
+                                          first-c (.toUpperCase (first w))]
+                                      (apply str (concat first-c (rest w))))) 
+                                  (rest words)))))
+
+(= (into-camel-case "something") "something")
+(= (into-camel-case "multi-word-key") "multiWordKey")
+(= (into-camel-case "leaveMeAlone") "leaveMeAlone")
+
+;; Problem 103, Generating k-combinations
+
+(defn combinations [k lst]
+  (if (empty? lst)
+    []
+    (if (= k 1)
+      (map #(vector %) lst)
+      (mapcat (fn [x] (combinations (dec k) (remove x lst) )) lst))))
+
+
+;; (= (combinations 3 #{0 1 2 3 4}) #{#{0 1 2} #{0 1 3} #{0 1 4} #{0 2 3} #{0 2 4}
+;;                          #{0 3 4} #{1 2 3} #{1 2 4} #{1 3 4} #{2 3 4}})
+
+
+
+(defn k-combination [n coll] 
+  (for [x (conj [] (first coll))
+        y (into [] (for [x (next coll)
+                         y (next coll)
+                         :when (< x y)]
+                     [x y]))]
+    (flatten [x y])))
+
+(defn k-combination [n coll]
+  (map #(conj % (first coll))
+       (for [x     (next coll)
+             y     (next coll) 
+             :when (< x y )]
+         #{x y})))
+
+(defn kc [n coll]
+  (apply concat (loop [result #{}
+                       s coll]
+                  (if (empty? s)
+                    result
+                    (recur (conj result (k-combination n s)) (rest s))))))
+
+(defn kc [k xs]
+  (cond
+    (= 0 k) #{#{}}
+    (empty? xs) #{}
+    :else
+    (let [y (first xs) ys (rest xs)]
+      (set (concat (kc k ys) (map #(conj % y) (kc (dec k) ys)))))))
+
+
+(= (kc 1 #{4 5 6}) #{#{4} #{5} #{6}})
+(= (kc 10 #{4 5 6}) #{})
+(= (kc 2 #{0 1 2}) #{#{0 1} #{0 2} #{1 2}})
+(= (kc 3 #{0 1 2 3 4}) #{#{0 1 2} #{0 1 3} #{0 1 4} #{0 2 3} #{0 2 4}
+                                     #{0 3 4} #{1 2 3} #{1 2 4} #{1 3 4} #{2 3 4}})
+(= (kc 4 #{[1 2 3] :a "abc" "efg"}) #{#{[1 2 3] :a "abc" "efg"}})
+(= (kc 2 #{[1 2 3] :a "abc" "efg"}) #{#{[1 2 3] :a} #{[1 2 3] "abc"} #{[1 2 3] "efg"}
+                                                  #{:a "abc"} #{:a "efg"} #{"abc" "efg"}})
+
+;; Problem 105, Identify keys and values
+
+(defn identify-keys-vals [coll]
+  (loop [result {}
+         s coll]
+    (if (empty? s)
+      result
+      (if-not (keyword? (first s))
+        (let [last-key (first (last result))
+              last-val (second (last result))]
+          (recur (assoc result last-key (conj last-val (first s))) (next s))) 
+        (recur (assoc result (first s) (if (keyword? (second s))
+                                            []
+                                         [(second s)])) (nnext s))))))
+
+(defn identify-keys-vals
+  [coll]
+  (if (empty? coll)
+    {}
+    (apply merge
+           (when-let [st (seq coll)]
+             (let [ft (first st)
+                   run (reduce (fn [acc x]
+                                 (if (keyword? x)
+                                   (reduced acc )
+                                   (conj acc x)))
+                               []
+                               (rest st))
+                   result (assoc {} ft run)]
+               (cons result (identify-keys-vals (drop (inc (count run)) st))))))))
+
+
+(= {} (identify-keys-vals  []))
+(= {:a [1]} (identify-keys-vals [:a 1]))
+(= {:a [1]:b [2]} (identify-keys-vals [:a 1, :b 2]))
+(= {:a [1 2 3] :b []:c [4]} (identify-keys-vals [:a 1 2 3 :b :c 4]))
+
+;; Problem 108, Lazy Searching
+(defn lazy-sarching [& s]
+  (let [firsts (map first s)]
+    (if (apply = firsts)
+      (first firsts)
+      (recur (map (fn [a] (filter #(>= % (apply max firsts)) a)) s)))))
+
+(= 3 (lazy-sarching [3 4 5]))
+(= 4 (lazy-sarching [1 2 3 4 5 6 7] [0.5 3/2 4 19]))
+(= 64 (lazy-sarching (map #(* % % %) (range))
+          (filter #(zero? (bit-and % (dec %))) (range))
+          (iterate inc 20)))
+(= 7 (lazy-sarching (range) (range 0 100 7/6) [2 3 5 7 11 13]))
+
+;; Problem 110, Sequence of pronunciations
+(defn sequence-of-pronunciations [x]
+  (let [y (mapcat #(vector (count %) (first %)) (partition-by identity x))]
+      (cons y (lazy-seq (sequence-of-pronunciations y)))))
+
+(= [[1 1] [2 1] [1 2 1 1]] (take 3 (sequence-of-pronunciations [1])))
+(= [3 1 2 4] (first (sequence-of-pronunciations [1 1 1 4 4])))
+(= [1 1 1 3 2 1 3 2 1 1] (nth (sequence-of-pronunciations [1]) 6))
+(= 338 (count (nth (sequence-of-pronunciations [3 2]) 15)))
+
+;; Problem 112, Sequs Horribilis
+(defn sequs-horribilis
+  [n c]
+  (loop [res []
+         elements c]
+    (if (or (empty? elements) (> (reduce + (flatten res)) n))
+      res
+      (if-not (coll? (first elements))
+        (if (> (+ (reduce + (flatten res)) (first elements)) n)
+          res
+          (recur (conj res (first elements)) (drop 1 elements)))
+        (recur (conj res (sequs-horribilis (- n (reduce + (flatten res))) (first elements))) (drop 1 elements))))))
+
+(=  (sequs-horribilis 10 [1 2 [3 [4 5] 6] 7])    '(1 2 (3 (4))))
+(=  (sequs-horribilis 30 [1 2 [3 [4 [5 [6 [7 8]] 9]] 10] 11])    '(1 2 (3 (4 (5 (6 (7)))))))
+(=  (sequs-horribilis 9 (range))    '(0 1 2 3))
+(=  (sequs-horribilis 1 [[[[[1]]]]])    '(((((1))))))
+(=  (sequs-horribilis 0 [1 2 [3 [4 5] 6] 7])    '())
+(=  (sequs-horribilis 0 [0 0 [0 [0]]])    '(0 0 (0 (0))))
+(=  (sequs-horribilis 1 [-10 [1 [2 3 [4 5 [6 7 [8]]]]]])
+    '(-10 (1 (2 3 (4)))))
+
+
+
+(defn take-n-while [n p coll]
+  (let [counter (atom 0)]
+    (lazy-seq
+     (when-let [item (seq coll)]
+       (when (and (< @counter n) (p (first item)))
+         (swap! counter inc))
+       (when (< @counter n)
+         (cons (first item) (take-n-while n p (rest item))))))))
+
+(= [2 3 5 7 11 13]
+   (take-n-while 4 #(= 2 (mod % 3))
+       [2 3 5 7 11 13 17 19 23]))
+(= ["this" "is" "a" "sentence"]
+   (take-n-while 3 #(some #{\i} %)
+       ["this" "is" "a" "sentence" "i" "wrote"]))
+(= ["this" "is"]
+   (take-n-while 1 #{"a"}
+       ["this" "is" "a" "sentence" "i" "wrote"]))
