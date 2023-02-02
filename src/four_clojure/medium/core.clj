@@ -426,8 +426,7 @@ maps))
 (=  (sequs-horribilis 1 [-10 [1 [2 3 [4 5 [6 7 [8]]]]]])
     '(-10 (1 (2 3 (4)))))
 
-
-
+;; Problem 114, Global take-while
 (defn take-n-while [n p coll]
   (let [counter (atom 0)]
     (lazy-seq
@@ -446,3 +445,70 @@ maps))
 (= ["this" "is"]
    (take-n-while 1 #{"a"}
        ["this" "is" "a" "sentence" "i" "wrote"]))
+
+;; Problem 115, The Balance of N
+(defn reverse-number[ number]
+  (loop [result 0
+         n number]
+    (if (<= n 0)
+      result
+      (recur (+ (mod n 10) (*  result 10)) (quot n 10)))))
+
+(defn balanced-number [number]
+  (let [rev (reverse-number number)]
+    (if (= rev number)
+      true
+      false)))
+
+(= true (balanced-number 11))
+(= true (balanced-number 121))
+(= false (balanced-number 123))
+(= true (balanced-number 0))
+(= false (balanced-number 88099))
+(= true (balanced-number 89098))
+(= false (balanced-number 89089))
+
+(= (take 20 (filter balanced-number (range)))
+   [0 1 2 3 4 5 6 7 8 9 11 22 33 44 55 66 77 88 99 101])
+
+;; Problem 116, Prime Sandwich
+
+(defn bp [x]
+  (letfn [(is-prime [x]
+            (condp = x
+              1 nil
+              2 2
+              (when (not-any? #(= 0 (mod x %)) (range 2 (inc (quot x 2))))
+                x)))]
+    (cond
+      (<= x 2) false
+      (not (is-prime x)) false
+      :else (let [lp (some is-prime (range (dec x) 1 -1))
+                  rp (some is-prime (drop (inc x) (range)))]
+              (= (/ (+ lp rp) 2) x)))))
+
+(= false (bp 4))
+(= true (bp 563))
+(= 1103 (nth (filter bp (range)) 15))
+
+;; Problem 118, Re-implement Map
+(defn -map [f xs]
+  (lazy-seq
+   (when-let [s (seq xs)]
+     (cons (f (first s))
+           (-map f (rest s))))))
+
+
+
+(= [3 4 5 6 7]
+   (-map inc [2 3 4 5 6]))
+(= (repeat 10 nil)
+   (-map (fn [_] nil) (range 10)))
+(= [1000000 1000001]
+   (->> (-map inc (range))
+        (drop (dec 1000000))
+        (take 2)))
+(= [1000000 1000001]
+   (->> (-map inc (range))
+        (drop (dec 1000000))
+        (take 2)))

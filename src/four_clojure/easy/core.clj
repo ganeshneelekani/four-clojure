@@ -488,3 +488,16 @@
 (= 256 ((my-closure 2) 16), ((my-closure 8) 2))
 (= [1 8 27 64] (map (my-closure 3) [1 2 3 4]))
 (= [1 2 4 8 16] (map #((my-closure %) 2) [0 1 2 3 4]))
+
+;; Problem 120, Sum of square of digits
+(defn -sum-of-square  [coll]
+    (let [digits #(map (comp read-string str) (str %))]
+      (count
+       (filter
+        (fn [v] (< v (apply + (map #(* % %) (digits v)))))
+        coll))))
+
+(= 8 (-sum-of-square (range 10)))
+(= 19 (-sum-of-square (range 30)))
+(= 50 (-sum-of-square (range 100)))
+(= 50 (-sum-of-square (range 1000)))
